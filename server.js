@@ -7,13 +7,15 @@ import serviceAccountKey from "./blog-space-user-firebase-adminsdk-nx8my-487b993
 // service
 import connectDB from "./config/db.js";
 import userRoutes from "./routes/userRoutes.js";
+import blogRoutes from "./routes/blogRoutes.js"
 
 dotenv.config();
 
 const server = express();
 const PORT = process.env.PORT || 5000;
 
-server.use(express.json());
+server.use(express.urlencoded({ extended: false }))
+server.use(express.json({ limit: '50mb' }));
 server.use(cors());
 
 // fire base initial stage
@@ -26,6 +28,7 @@ connectDB();
 
 // common route
 server.use("/api", userRoutes);
+server.use("/api/blog", blogRoutes)
 
 server.listen(PORT, () => {
     console.log(`App listening on port -> ${PORT}`);

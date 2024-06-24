@@ -21,7 +21,7 @@ const blogSchema = mongoose.Schema({
         // required: true
     },
     content: {
-        type: [],
+        type: String,
         // required: true
     },
     tags: {
@@ -59,13 +59,12 @@ const blogSchema = mongoose.Schema({
         type: Boolean,
         default: false
     }
+},
+    {
+        timestamps: {
+            createdAt: 'publishedAt'
+        }
 
-}, 
-{ 
-    timestamps: {
-        createdAt: 'publishedAt'
-    } 
-
-})
+    })
 
 export default mongoose.model("blogs", blogSchema);

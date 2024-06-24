@@ -1,7 +1,7 @@
 import bcrypt from "bcrypt";
 import { nanoid } from "nanoid";
 import jwt from "jsonwebtoken";
-import admin from "firebase-admin";
+import { getAuth } from "firebase-admin/auth";
 import User from "../Schema/User.js";
 
 const emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
@@ -63,17 +63,13 @@ export const signin = async (req, res) => {
 };
 
 export const googleAuth = async (req, res) => {
-    const { access_token, profile_img } = req.body;
-
-    let profile_pic = profile_img?.replace("s96-c", "s384-c");
-
-    if (!access_token || typeof access_token !== 'string') {
-        return res.status(400).json({ error: "Invalid access token" });
-    }
+    const { access_token } = req.body;
 
     try {
-        const decodedUser = await admin.auth().verifyIdToken(access_token);
-        let { email, name } = decodedUser;
+        const decodedUser = await getAuth().verifyIdToken(access_token);
+        let { email, name, picture } = decodedUser;
+
+        picture = picture?.replace("s96-c", "s384-c");
 
         let user = await User.findOne({ "personal_info.email": email })
             .select("personal_info.fullname personal_info.username personal_info.profile_img google_auth");
@@ -85,10 +81,11 @@ export const googleAuth = async (req, res) => {
         } else {
             const username = await generateUserName(email);
             user = new User({
-                personal_info: { fullname: name, email, profile_img: profile_pic, username, google_auth: true },
+                personal_info: { fullname: name, email, profile_img: picture, username },
+                google_auth: true
             });
 
-            await user.save();
+            user = await user.save();
         }
 
         return res.status(200).json(formateDataToSend(user));
