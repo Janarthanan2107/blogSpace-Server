@@ -1,16 +1,46 @@
-# POST http://localhost:5000/signUp 
+# POST http://localhost:5000/api/signUp 
+# Content-Type: application/json
+
+#   {
+#       "fullname":"Janarthanan",
+#       "email": "janarthanan@gmail.com",
+#       "password": "Janarthanan2103"
+#   }
+
+# token- eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY2NzhmMzE4MDA0OTM1NjAwNWJhNzU4NiIsImlhdCI6MTcxOTIwMjU4NH0.C2THrCqWob_1Np_vP0kDlMC1Ff5dLkaGdgukwR2W_o4
+
+# POST http://localhost:5000/api/signin
 # Content-Type: application/json
 
 # {
-#     "fullname":"Janarthanan",
 #     "email": "janarthanan@gmail.com",
 #     "password": "Janarthanan2103"
+# } 
+
+# POST http://localhost:5000/api/blog/create
+# Content-Type: application/json
+# Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY2NzhmMzE4MDA0OTM1NjAwNWJhNzU4NiIsImlhdCI6MTcxOTIwMjU4NH0.C2THrCqWob_1Np_vP0kDlMC1Ff5dLkaGdgukwR2W_o4
+
+# {
+#   "title":"Jana @dredfdjnjn &*%E#",
+#   "banner":"https://example.com/img-url",
+#   "des":"im a frontend developer",
+#   "content":"Im working as a frontend developer in simple stacks",
+#   "tags":["tags1","tags2"]
 # }
 
-POST http://localhost:5000/signin
+# GET http://localhost:5000/api/blog/latestBlogs
+# GET http://localhost:5000/api/blog/trendingBlogs
+POST http://localhost:5000/api/blog/searchBlogs
 Content-Type: application/json
 
 {
-    "email": "janarthanan@gmail.com",
-    "password": "Janarthanan2103"
-} 
+  "tag":"Hokage"
+}
+
+
+# POST http://localhost:5000/api/upload/image
+
+# {
+#   "image":"https://example.com/dfdfd"
+# }

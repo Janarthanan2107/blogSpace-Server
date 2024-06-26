@@ -28,7 +28,7 @@ connectDB();
 
 // common route
 server.use("/api", userRoutes);
-server.use("/api/blog", blogRoutes)
+server.use("/api/blog", blogRoutes);
 
 server.listen(PORT, () => {
     console.log(`App listening on port -> ${PORT}`);

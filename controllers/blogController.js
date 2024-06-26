@@ -2,6 +2,22 @@ import { nanoid } from "nanoid";
 import Blog from "../Schema/Blog.js";
 import User from "../Schema/User.js";
 
+export const getBlog = async (req, res) => {
+    try {
+        const maxLimit = 5;
+
+        const blogs = await Blog.find({ draft: false })
+            .populate("author", "personal_info.profile_img personal_info.username personal_info.fullname -_id")
+            .sort({ publishedAt: -1 })
+            .select("blog_id title des banner activity tags publishedAt -_id")
+            .limit(maxLimit);
+
+        res.status(200).json({ blogs });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
 export const createBlog = async (req, res) => {
 
     const authorID = req.user
@@ -10,6 +26,8 @@ export const createBlog = async (req, res) => {
     let { title, banner, des, content, tags, draft } = req.body;
 
     let blog_id = title.replace(/[^a-zA-Z0-9]/g, ' ').replace(/\s+/g, '-').trim() + '-' + nanoid();
+
+    tags = tags.map(tag => tag.toLowerCase());
 
     const blogObject = {
         title,
@@ -56,3 +74,38 @@ export const createBlog = async (req, res) => {
         });
     }
 };
+
+export const trendingBlog = async (req, res) => {
+    try {
+        const maxLimit = 5;
+
+        const blogs = await Blog.find({ draft: false })
+            .populate("author", "personal_info.profile_img personal_info.username personal_info.fullname -_id")
+            .sort({ "activity.total_read": -1, "activity.total_likes": -1, "publishedAt": -1 })
+            .select("blog_id title publishedAt -_id")
+            .limit(maxLimit);
+
+        res.status(200).json({ blogs });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+}
+
+export const searchBlogs = async (req, res) => {
+    let { tag } = req.body;
+
+    let findQuery = { tags: tag, draft: false };
+
+    let maxLimit = 5;
+    try {
+        const blogs = await Blog.find(findQuery)
+            .populate("author", "personal_info.profile_img personal_info.username personal_info.fullname -_id")
+            .sort({ publishedAt: -1 })
+            .select("blog_id title des banner activity tags publishedAt -_id")
+            .limit(maxLimit);
+
+        res.status(200).json({ blogs });
+    } catch (error) {
+        res.status(500).json({ error: err.message });
+    }
+}
