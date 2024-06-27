@@ -4,12 +4,14 @@ import User from "../Schema/User.js";
 
 export const getBlog = async (req, res) => {
     try {
+        let { page } = req.body;
         const maxLimit = 5;
 
         const blogs = await Blog.find({ draft: false })
             .populate("author", "personal_info.profile_img personal_info.username personal_info.fullname -_id")
             .sort({ publishedAt: -1 })
             .select("blog_id title des banner activity tags publishedAt -_id")
+            .skip((page - 1) * maxLimit)
             .limit(maxLimit);
 
         res.status(200).json({ blogs });
@@ -92,16 +94,17 @@ export const trendingBlog = async (req, res) => {
 }
 
 export const searchBlogs = async (req, res) => {
-    let { tag } = req.body;
+    let { tag, page } = req.body;
 
     let findQuery = { tags: tag, draft: false };
 
-    let maxLimit = 5;
+    let maxLimit = 2;
     try {
         const blogs = await Blog.find(findQuery)
             .populate("author", "personal_info.profile_img personal_info.username personal_info.fullname -_id")
             .sort({ publishedAt: -1 })
             .select("blog_id title des banner activity tags publishedAt -_id")
+            .skip((page - 1) * maxLimit)
             .limit(maxLimit);
 
         res.status(200).json({ blogs });
@@ -109,3 +112,32 @@ export const searchBlogs = async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 }
+
+export const getSearchBlogsCount = async (req, res) => {
+    let { tag } = req.body;
+
+    let findQuery = { tags: tag, draft: false };
+
+    try {
+        Blog.countDocuments(findQuery)
+            .then(count => {
+                return res.status(200).json({ totalDocs: count });
+            })
+            .catch(err => {
+                return res.status(500).json({ error: err.message });
+            })
+    } catch (error) {
+        console.error("Error counting blog documents:", err.message);
+        return res.status(500).json({ error: "Internal Server Error" });
+    }
+}
+
+export const getallBlogsCount = async (req, res) => {
+    try {
+        const count = await Blog.countDocuments({ draft: false });
+        return res.status(200).json({ totalDocs: count });
+    } catch (err) {
+        console.error("Error counting blog documents:", err.message);
+        return res.status(500).json({ error: "Internal Server Error" });
+    }
+};
