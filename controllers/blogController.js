@@ -33,9 +33,10 @@ export const getLatestBlog = async (req, res) => {
     }
 };
 
+// get single blog
 export const getBlog = async (req, res) => {
-    let { blog_id } = req.body;
-    let incrementVal = 1;
+    let { blog_id, draft, mode } = req.body;
+    let incrementVal = mode !== 'edit' ? 1 : 0;
 
     try {
         const blog = await Blog.findOneAndUpdate({ blog_id }, { $inc: { "activity.total_reads": incrementVal } })
@@ -52,6 +53,10 @@ export const getBlog = async (req, res) => {
                 { $inc: { "account_info.total_reads": incrementVal } },
                 { new: true }
             );
+
+            if (blog.draft && !draft) {
+                return res.status(500).json({ error: 'You cannot access the draft blogs' })
+            }
         } catch (err) {
             return res.status(500).json({ error: err.message });
         }
@@ -62,50 +67,61 @@ export const getBlog = async (req, res) => {
     }
 };
 
-
-
 // Create a new blog
 export const createBlog = async (req, res) => {
     const authorID = req.user;
-    const { title, banner, des, content, tags, draft } = req.body;
+    const { title, banner, des, content, tags, draft, id } = req.body;
+    const blog_id = id || `${title.replace(/[^a-zA-Z0-9]/g, ' ').replace(/\s+/g, '-').trim()}-${nanoid()}`;
+    const formattedTags = tags?.map(tag => tag.toLowerCase());
 
-    const blog_id = `${title.replace(/[^a-zA-Z0-9]/g, ' ').replace(/\s+/g, '-').trim()}-${nanoid()}`;
-    const formattedTags = tags.map(tag => tag.toLowerCase());
+    if (id) {
+        try {
+            // console.log(Blog, "Blog_ID");
+            await Blog.findOneAndUpdate(
+                { blog_id },
+                { title, des, banner, content, tags: formattedTags, draft: draft ? draft : false }
+            );
+            return res.status(200).json({ id: blog_id });
+        } catch (err) {
+            return res.status(500).json({ error: err.message });
+        }
+    } else {
+        const blogObject = {
+            title,
+            banner,
+            des,
+            content,
+            tags: formattedTags,
+            author: authorID,
+            draft: Boolean(draft),
+            blog_id
+        };
 
-    const blogObject = {
-        title,
-        banner,
-        des,
-        content,
-        tags: formattedTags,
-        author: authorID,
-        blog_id
-    };
+        try {
+            const blog = new Blog(blogObject);
+            const savedBlog = await blog.save();
 
-    try {
-        const blog = new Blog(blogObject);
-        const savedBlog = await blog.save();
+            const incrementVal = draft ? 0 : 1;
+            await User.findByIdAndUpdate(
+                authorID,
+                {
+                    $inc: { "account_info.total_posts": incrementVal },
+                    $push: { blogs: savedBlog._id }
+                },
+                { new: true }
+            );
 
-        const incrementVal = draft ? 0 : 1;
-        const updatedUser = await User.findByIdAndUpdate(
-            authorID,
-            {
-                $inc: { "account_info.total_posts": incrementVal },
-                $push: { blogs: savedBlog._id }
-            },
-            { new: true }
-        );
-
-        res.status(201).json({
-            success: true,
-            message: `Your blog successfully created with the ID: ${savedBlog._id}`
-        });
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: "An error occurred while creating the blog.",
-            error: error.message
-        });
+            res.status(201).json({
+                success: true,
+                message: `Your blog was successfully created with the ID: ${savedBlog._id}`
+            });
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                message: "An error occurred while creating the blog.",
+                error: error.message
+            });
+        }
     }
 };
 
@@ -182,3 +198,4 @@ export const getallBlogsCount = async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 };
+

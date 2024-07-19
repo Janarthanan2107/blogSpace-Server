@@ -8,6 +8,8 @@ import serviceAccountKey from "./blog-space-user-firebase-adminsdk-nx8my-487b993
 import connectDB from "./config/db.js";
 import userRoutes from "./routes/userRoutes.js";
 import blogRoutes from "./routes/blogRoutes.js"
+import notifyRoutes from "./routes/notificationRoute.js"
+import commentRoutes from "./routes/commentRoutes.js"
 
 dotenv.config();
 
@@ -29,6 +31,8 @@ connectDB();
 // common route
 server.use("/api", userRoutes);
 server.use("/api/blog", blogRoutes);
+server.use("/api/blog/notify", notifyRoutes);
+server.use("/api/blog/comment", commentRoutes);
 
 server.listen(PORT, () => {
     console.log(`App listening on port -> ${PORT}`);
