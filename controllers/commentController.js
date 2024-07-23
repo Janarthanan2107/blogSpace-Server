@@ -133,12 +133,12 @@ export const getComments = async (req, res) => {
 export const getReplies = async (req, res) => {
     let { _id, skip } = req.body;
 
-    let maxLimit = 5
+    let maxLimit = 3
 
     Comment.findOne({ _id })
         .populate({
             path: "children",
-            option: {
+            options: {
                 limit: maxLimit,
                 skip: skip,
                 sort: { 'commentedAt': -1 }
