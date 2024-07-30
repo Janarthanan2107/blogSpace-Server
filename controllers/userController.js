@@ -14,6 +14,7 @@ const formateDataToSend = (user) => {
         profile_img: user.personal_info.profile_img,
         username: user.personal_info.username,
         fullname: user.personal_info.fullname,
+        googleAuth: user.google_auth
     };
 };
 
@@ -91,6 +92,49 @@ export const googleAuth = async (req, res) => {
         return res.status(200).json(formateDataToSend(user));
     } catch (err) {
         return res.status(500).json({ error: "Failed to authenticate with Google. Try with another Gmail address." });
+    }
+};
+
+export const changeAuth = async (req, res) => {
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.user;
+
+    if (!currentPassword || !newPassword) {
+        return res.status(403).json({ error: "Fill all the inputs" });
+    }
+
+    if (!passwordRegex.test(newPassword)) {
+        return res.status(403).json({ error: "Password should be 6 to 20 characters long with a numeric, 1 uppercase, and 1 lowercase letter" });
+    }
+
+    try {
+        // Fetch user from database
+        const user = await User.findById(userId);
+
+        if (!user) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        // Check if user is a Google user
+        if (user.google_auth) {
+            return res.status(403).json({ error: "Google-authenticated users cannot change password" });
+        }
+
+        // Check if current password is correct
+        const isPasswordMatch = await bcrypt.compare(currentPassword, user.personal_info.password);
+        if (!isPasswordMatch) {
+            return res.status(403).json({ error: "Current password is incorrect" });
+        }
+
+        // Hash new password and update
+        const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+        user.personal_info.password = hashedNewPassword;
+        await user.save();
+
+        return res.status(200).json({ message: "Password updated successfully" });
+
+    } catch (err) {
+        return res.status(500).json({ error: err.message });
     }
 };
 
