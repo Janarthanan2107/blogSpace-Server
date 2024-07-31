@@ -82,7 +82,7 @@ export const googleAuth = async (req, res) => {
         } else {
             const username = await generateUserName(email);
             user = new User({
-                personal_info: { fullname: name, email, profile_img: picture, username },
+                personal_info: { fullname: name, email, username },
                 google_auth: true
             });
 
@@ -95,6 +95,7 @@ export const googleAuth = async (req, res) => {
     }
 };
 
+// change password
 export const changeAuth = async (req, res) => {
     const { currentPassword, newPassword } = req.body;
     const userId = req.user;
@@ -138,6 +139,7 @@ export const changeAuth = async (req, res) => {
     }
 };
 
+// get a logged in user
 export const getUserProfile = async (req, res) => {
     let { username } = req.body;
 
@@ -151,3 +153,43 @@ export const getUserProfile = async (req, res) => {
             return res.status(500).json(err.message);
         })
 }
+
+// update user
+export const updateUserProfile = async (req, res) => {
+    const userId = req.user;
+    const { personal_info, social_links } = req.body;
+
+    try {
+        // Fetch user from database
+        const user = await User.findById(userId);
+
+        if (!user) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        // Update user details
+        if (personal_info) {
+
+            let { username, bio, profile_img } = personal_info;
+
+            user.personal_info.username = username;
+            user.personal_info.bio = bio;
+            user.personal_info.profile_img = profile_img;
+        }
+
+        if (social_links) {
+            user.social_links = {
+                ...user.social_links,
+                ...social_links
+            };
+        }
+
+        await user.save();
+
+        return res.status(200).json({ message: "Profile updated successfully", user });
+
+    } catch (err) {
+        return res.status(500).json({ error: err.message });
+    }
+};
+

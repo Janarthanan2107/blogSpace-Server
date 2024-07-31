@@ -1,5 +1,5 @@
 import express from "express";
-import { signup, signin, googleAuth, changeAuth, getUserProfile } from "../controllers/userController.js";
+import { signup, signin, googleAuth, changeAuth, getUserProfile, updateUserProfile } from "../controllers/userController.js";
 import { verifyJWT } from "../middleware/verifyJWT.js";
 
 const router = express.Router();
@@ -14,5 +14,8 @@ router.post("/getUserProfile", getUserProfile);
 
 // change password
 router.post("/change-Auth", verifyJWT, changeAuth);
+
+// update user profile
+router.post("/updateUserProfile", verifyJWT, updateUserProfile);
 
 export default router;
