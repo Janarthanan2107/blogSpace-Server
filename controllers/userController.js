@@ -2,7 +2,11 @@ import bcrypt from "bcrypt";
 import { nanoid } from "nanoid";
 import jwt from "jsonwebtoken";
 import { getAuth } from "firebase-admin/auth";
+
 import User from "../Schema/User.js";
+import Blog from "../Schema/Blog.js";
+import Comment from "../Schema/Comment.js";
+import Notification from "../Schema/Notification.js"
 
 const emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
 const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,20}$/;
@@ -54,6 +58,8 @@ export const signin = async (req, res) => {
         const user = await User.findOne({ "personal_info.email": email });
         if (!user) return res.status(403).json({ error: "Email not found" });
 
+        if (user.isDeleted) return res.status(403).json({ error: "Account has been deleted" });
+
         const result = await bcrypt.compare(password, user.personal_info.password);
         if (!result) return res.status(403).json({ error: "Incorrect Password" });
 
@@ -62,6 +68,7 @@ export const signin = async (req, res) => {
         return res.status(500).json({ error: err.message });
     }
 };
+
 
 export const googleAuth = async (req, res) => {
     const { access_token } = req.body;
@@ -192,4 +199,28 @@ export const updateUserProfile = async (req, res) => {
         return res.status(500).json({ error: err.message });
     }
 };
+
+// delete user
+export const deleteUserProfile = async (req, res) => {
+    const userId = req.user;
+
+    try {
+        const user = await User.findById(userId);
+
+        if (!user) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        // Set isDeleted flag to true
+        user.isDeleted = true;
+        await user.save();
+
+        return res.status(200).json({ message: "User profile marked as deleted" });
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ error: error.message });
+    }
+};
+
 
