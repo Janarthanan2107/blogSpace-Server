@@ -2,11 +2,13 @@ import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import admin from "firebase-admin";
-import fs from 'fs';
-import path from 'path';
+// import fs from 'fs';
+// import path from 'path';
 
-const serviceAccountPath = path.resolve('./blog-space-user-firebase-adminsdk-nx8my-487b993063.json');
-const serviceAccountKey = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
+// const serviceAccountPath = path.resolve('./blog-space-user-firebase-adminsdk-nx8my-487b993063.json');
+// const serviceAccountKey = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
+
+import serviceAccountKey from "./blog-space-user-firebase-adminsdk-nx8my-487b993063.json" assert { type: "json" };
 
 // service
 import connectDB from "./config/db.js";
