@@ -45,3 +45,20 @@ export const isLikedByUser = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
+
+// receive new notification
+export const getNewNotification = async (req, res) => {
+    const user_id = req.user;
+
+    Notification.exists({ notification_for: user_id, seen: false, user: { $ne: user_id } })
+        .then((result) => {
+            if (result) {
+                return res.status(200).json({ new_notification_available: true });
+            } else {
+                return res.status(200).json({ new_notification_available: false });
+            }
+        }).catch((err) => {
+            console.log(err.message);
+            return res.status(500).json({ error: err.message });
+        })
+}
