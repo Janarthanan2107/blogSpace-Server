@@ -24,7 +24,7 @@ const PORT = process.env.PORT || 5000;
 
 server.use(express.urlencoded({ extended: false }))
 server.use(express.json({ limit: '50mb' }));
-server.use(cors());
+server.use(cors({origin:"https://magicalblogspace.netlify.app/"}));
 
 // fire base initial stage
 admin.initializeApp({

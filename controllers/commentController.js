@@ -19,7 +19,7 @@ const deleteCommentsFunc = (_id) => {
                 console.log("Comment notification deleted");
             })
 
-            Notification.findOneAndDelete({ reply: _id }).then(notification => {
+            Notification.findOneAndUpdate({ reply: _id }, { $unset: { reply: 1 } }).then(notification => {
                 console.log("reply notification deleted");
             })
 
@@ -42,7 +42,7 @@ const deleteCommentsFunc = (_id) => {
 // localhost:5000/api/blog/comment/add
 export const addComment = async (req, res) => {
     let user_id = req.user;
-    let { _id, comment, blog_author, replying_to } = req.body;
+    let { _id, comment, blog_author, replying_to, notification_id } = req.body;
 
     if (!comment.length) {
         return res.status(403).json({ error: "Write something to leave a comment" })
@@ -96,6 +96,12 @@ export const addComment = async (req, res) => {
 
             await Comment.findOneAndUpdate({ _id: replying_to }, { $push: { children: commentFile._id } })
                 .then(replyingToCommentDoc => { notificationObj.notification_for = replyingToCommentDoc.commented_by })
+
+            if (notification_id) {
+                Notification.findOneAndUpdate({ _id: notification_id }, { reply: commentFile._id }).then(notification => {
+                    console.log("Notification Updated");
+                })
+            }
         }
 
         new Notification(notificationObj).save().then(() => {
