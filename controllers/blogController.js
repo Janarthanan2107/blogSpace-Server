@@ -1,6 +1,8 @@
 import { nanoid } from "nanoid";
 import Blog from "../Schema/Blog.js";
 import User from "../Schema/User.js";
+import Notification from "../Schema/Notification.js";
+import Comment from "../Schema/Comment.js";
 
 // Helper function to format blog query
 const formatBlogQuery = (tag, query, author, eliminate_blog) => {
@@ -199,3 +201,78 @@ export const getallBlogsCount = async (req, res) => {
     }
 };
 
+// Get the all blogs with draft
+export const userWrittenBlogs = async (req, res) => {
+    let user_id = req.user;
+
+    let { page, draft, query, deletedDocCount } = req.body;
+
+    let maxLimit = 5;
+
+    let skipDocs = (page - 1) * maxLimit;
+
+    if (deletedDocCount) {
+        skipDocs -= deletedDocCount;
+    }
+
+    Blog.find({ author: user_id, draft, title: new RegExp(query, 'i') })
+        .skip(skipDocs)
+        .limit(maxLimit)
+        .sort({ publishedAt: -1 })
+        .select("title banner publishedAt blog_id activity des draft -_id")
+        .then(
+            blogs => {
+                return res.status(200).json({ blogs })
+            })
+        .catch(
+            err => {
+                return res.status(500).json({ error: err.message })
+            }
+        )
+}
+
+// Get the total count of all blogs with draft
+export const userWrittenBlogsCount = async (req, res) => {
+    let user_id = req.user;
+
+    let { draft, query } = req.body;
+
+    Blog.countDocuments({ author: user_id, draft, title: new RegExp(query, 'i') })
+        .then(count => {
+            return res.status(200).json({ totalDocs: count })
+        })
+        .catch(err => {
+            return res.status(500).json({ error: err.message })
+        })
+}
+
+// delete the selected blog from dashboard
+export const deleteUserWrittenBlog = async (req, res) => {
+    let user_id = req.user;
+    let { blog_id } = req.body;
+
+    // console.log(blog_id, "blog_id");
+
+
+    Blog.findOneAndDelete({ blog_id })
+        .then((blog) => {
+            Notification.deleteMany({ "blog": blog._id }).then(data => {
+                console.log("Notification Deleted");
+            })
+
+            Comment.deleteMany({ "blog_id": blog._id }).then(data => {
+                console.log("Comments Deleted");
+            })
+
+            User.findOneAndUpdate({ _id: user_id }, { $pull: { blog: blog._id }, $inc: { "account_info:total_posts": -1 } })
+                .then(user => {
+                    console.log("Blog Deleted");
+
+                })
+
+            return res.status(200).json({ message: "Blog Deleted Successful" })
+        })
+        .catch(err => {
+            return res.status(500).json({ error: err.message })
+        })
+}

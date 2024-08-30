@@ -93,6 +93,14 @@ export const getNotification = async (req, res) => {
         .then(notification => {
             // console.log(notification, "notification");
 
+            Notification.updateMany(query, { seen: true })
+                .skip(skip)
+                .limit(limit)
+                .then(() => {
+                    console.log("Notification seen");
+
+                })
+
             return res.status(200).json({ notification })
         }).catch(error => {
             console.log(error);
